@@ -21,9 +21,9 @@
     --sans:"Rubik",system-ui,sans-serif;
     --display:"Outfit",system-ui,sans-serif;
     --mono:"JetBrains Mono","Cascadia Code",ui-monospace,Consolas,monospace;
-    --ease:cubic-bezier(.2,.8,.2,1);
-    --ease-out:cubic-bezier(.16,1,.3,1);
-    --ease-spring:cubic-bezier(.34,1.56,.64,1);
+    --ease:cubic-bezier(.25,.46,.45,.94);
+    --ease-out:cubic-bezier(.22,.61,.36,1);
+    --ease-spring:cubic-bezier(.25,.46,.45,.94);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth;scrollbar-color:#2a2d38 var(--bg)}
@@ -68,10 +68,10 @@
     border-bottom:1px solid rgba(124,58,237,.15)}
   .nav{display:flex;align-items:center;justify-content:space-between;height:68px}
   .brand-wrap{display:flex;align-items:center;gap:12px}
-  .brand-logo{width:36px;height:36px;border-radius:50%;object-fit:cover;
-    border:2px solid rgba(124,58,237,.4);box-shadow:0 0 16px rgba(124,58,237,.25);
-    transition:transform .3s var(--ease-spring),box-shadow .3s}
-  .brand-logo:hover{transform:scale(1.15) rotate(8deg);box-shadow:0 0 24px rgba(124,58,237,.45)}
+  .brand-logo{width:40px;height:40px;border-radius:10px;object-fit:cover;object-position:center 30%;
+    border:1.5px solid rgba(124,58,237,.3);box-shadow:0 0 12px rgba(124,58,237,.18);
+    transition:box-shadow .3s var(--ease-out)}
+  .brand-logo:hover{box-shadow:0 0 20px rgba(124,58,237,.35)}
   .brand{font:800 16px/1 var(--display);letter-spacing:5px;text-transform:uppercase;
     background:linear-gradient(135deg,#fff 30%,var(--ac2) 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
   .nav-links{display:flex;gap:32px;align-items:center}
@@ -85,7 +85,7 @@
   /* ---------- buttons ---------- */
   .btn{display:inline-flex;align-items:center;gap:10px;border-radius:12px;cursor:pointer;
     font:600 15px/1 var(--sans);padding:15px 30px;border:0;position:relative;
-    transition:filter .2s,transform .15s,box-shadow .25s,border-color .2s,color .2s,background .2s;
+    transition:filter .2s,transform .25s var(--ease-out),box-shadow .25s,border-color .2s,color .2s,background .2s;
     will-change:transform}
   .btn-p{background:linear-gradient(135deg,var(--ac),#5B21B6);color:#fff;overflow:hidden;
     box-shadow:0 8px 32px rgba(124,58,237,.4),inset 0 1px 0 rgba(255,255,255,.12)}
@@ -101,13 +101,13 @@
 
   /* ---------- hero ---------- */
   .hero{position:relative;padding:140px 0 100px;text-align:center;z-index:1}
-  .hero-logo{width:clamp(100px,16vw,160px);height:clamp(100px,16vw,160px);border-radius:50%;
-    object-fit:cover;margin:0 auto 36px;display:block;
-    border:3px solid rgba(124,58,237,.45);
-    box-shadow:0 0 40px rgba(124,58,237,.35),0 0 80px rgba(124,58,237,.15),inset 0 0 30px rgba(0,0,0,.3);
-    animation:heroFloat 6s ease-in-out infinite;transition:transform .4s var(--ease-spring)}
-  .hero-logo:hover{transform:scale(1.08) rotate(-4deg)}
-  @keyframes heroFloat{50%{transform:translateY(-10px)}}
+  .hero-logo-wrap{position:relative;width:min(520px,88%);margin:0 auto 40px}
+  .hero-logo-glow{position:absolute;inset:-20px;background:radial-gradient(ellipse at center,rgba(124,58,237,.2),transparent 70%);filter:blur(30px);z-index:0}
+  .hero-logo{position:relative;z-index:1;width:100%;height:auto;display:block;
+    border-radius:20px;border:1.5px solid rgba(124,58,237,.25);
+    box-shadow:0 30px 60px rgba(0,0,0,.5),0 0 40px rgba(124,58,237,.12);
+    animation:heroFloat 8s ease-in-out infinite}
+  @keyframes heroFloat{50%{transform:translateY(-8px)}}
   .eyebrow{display:inline-flex;align-items:center;gap:9px;font:600 11px/1 var(--mono);
     letter-spacing:3px;color:var(--ac3);border:1px solid rgba(124,58,237,.3);background:rgba(124,58,237,.08);
     padding:8px 18px;border-radius:24px;margin-bottom:32px;backdrop-filter:blur(8px)}
@@ -139,8 +139,8 @@
   .mock::before{content:'';position:absolute;inset:0 25% auto;height:1px;border-radius:18px 18px 0 0;
     background:linear-gradient(90deg,transparent,var(--ac),transparent)}
   .mock-bar{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid rgba(124,58,237,.15)}
-  .mock-bar i{width:10px;height:10px;border-radius:50%;background:#2a2d38;transition:transform .2s var(--ease-spring)}
-  .mock-bar i:hover{transform:scale(1.3)}
+  .mock-bar i{width:10px;height:10px;border-radius:50%;background:#2a2d38;transition:opacity .2s}
+  .mock-bar i:hover{opacity:.7}
   .mock-bar i:first-child{background:#5b1f2a}.mock-bar i:nth-child(2){background:#5b4a12}.mock-bar i:nth-child(3){background:#14532d}
   .mock-bar span{margin-left:10px;font:600 11px/1 var(--mono);color:var(--faint);letter-spacing:2px;text-transform:uppercase}
   .mock-body{padding:20px 22px 24px;text-align:left;display:grid;gap:12px}
@@ -165,12 +165,11 @@
 
   /* spring toggle */
   .mtoggle{width:44px;height:24px;border-radius:14px;background:rgba(255,255,255,.08);position:relative;
-    transition:background .35s var(--ease-spring),box-shadow .35s;flex-shrink:0}
+    transition:background .3s var(--ease-out),box-shadow .3s;flex-shrink:0}
   .mtoggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
-    background:#5a5f70;transition:left .35s var(--ease-spring),background .3s,box-shadow .3s,transform .35s var(--ease-spring)}
+    background:#5a5f70;transition:left .3s var(--ease-out),background .25s,box-shadow .25s}
   .mrow.active .mtoggle{background:rgba(124,58,237,.5);box-shadow:0 0 16px rgba(124,58,237,.35),inset 0 0 8px rgba(124,58,237,.2)}
   .mrow.active .mtoggle::after{left:23px;background:var(--ac2);box-shadow:0 0 12px rgba(167,139,250,.6)}
-  .mrow:active .mtoggle::after{transform:scale(.85)}
 
   /* status bar */
   .mstatus{margin:4px 22px 22px;padding:12px 16px;border-radius:10px;
@@ -212,8 +211,8 @@
     background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(124,58,237,.06));
     border:1px solid rgba(124,58,237,.25);color:var(--ac2);
     box-shadow:0 4px 16px rgba(124,58,237,.12);
-    transition:transform .4s var(--ease-spring),box-shadow .4s}
-  .fcard:hover .ficon{transform:scale(1.1) rotate(-3deg);box-shadow:0 6px 24px rgba(124,58,237,.25)}
+    transition:box-shadow .4s var(--ease-out)}
+  .fcard:hover .ficon{box-shadow:0 6px 24px rgba(124,58,237,.25)}
   .ficon svg{width:22px;height:22px}
   .fcard h3{font:700 18px/1.3 var(--display);margin-bottom:10px;letter-spacing:-.3px}
   .fcard p{color:var(--dim);font-size:14.5px;font-weight:300;line-height:1.65}
@@ -243,7 +242,7 @@
   .hash code{flex:1;font:500 11px/1.6 var(--mono);color:var(--dim);word-break:break-all}
   .hash button{flex-shrink:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--dim);
     border-radius:8px;padding:8px 15px;font:600 11px/1 var(--mono);letter-spacing:1.5px;
-    cursor:pointer;transition:border-color .2s,color .2s,background .2s,transform .15s var(--ease-spring)}
+    cursor:pointer;transition:border-color .2s,color .2s,background .2s}
   .hash button:hover{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.08)}
   .hash button:active{transform:scale(.92)}
   .hash button.copied{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.12)}
@@ -274,10 +273,10 @@
   .toast{background:rgba(30,28,53,.92);border:1px solid rgba(52,211,153,.25);border-left:3px solid var(--green);
     border-radius:10px;padding:12px 16px;font:500 12.5px/1 var(--mono);color:var(--tx);
     box-shadow:0 12px 32px rgba(0,0,0,.5);backdrop-filter:blur(12px);
-    animation:tin .3s var(--ease-spring);transition:opacity .3s,transform .3s}
+    animation:tin .35s var(--ease-out);transition:opacity .3s,transform .3s}
   .toast.out{opacity:0;transform:translateX(24px)}
   .toast.purple{border-color:rgba(124,58,237,.35);border-left-color:var(--ac2)}
-  @keyframes tin{from{transform:translateX(24px) scale(.9);opacity:0}}
+  @keyframes tin{from{transform:translateX(24px);opacity:0}}
 
   /* ---------- confetti burst ---------- */
   .confetti{position:fixed;pointer-events:none;z-index:998;border-radius:2px;will-change:transform,opacity}
@@ -310,7 +309,10 @@
 
 <section class="hero">
   <div class="wrap">
-    <img class="hero-logo rv" src="logo.png" alt="Etsuko logo">
+    <div class="hero-logo-wrap rv">
+      <div class="hero-logo-glow"></div>
+      <img class="hero-logo" src="logo.png" alt="Crescent Moon Sakura Temple Nightscape">
+    </div>
     <div class="eyebrow rv">EXTERNAL &middot; WINDOWS &middot; DX11</div>
     <h1 class="rv">the external<br><span class="grad">that evolves with you</span></h1>
     <p class="tagline rv">player ESP, silent aim, HWID-locked keys and one-click updates &mdash;
@@ -443,7 +445,7 @@
   <div class="wrap foot">
     <div>
       <div style="display:flex;align-items:center;gap:10px">
-        <img src="logo.png" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(124,58,237,.35)">
+        <img src="logo.png" alt="" style="width:32px;height:32px;border-radius:8px;object-fit:cover;object-position:center 30%;border:1.5px solid rgba(124,58,237,.3)">
         <div class="brand">ETSUKO</div>
       </div>
       <p>not affiliated with Roblox Corporation. use at your own discretion.</p>
@@ -565,12 +567,12 @@
   /* ---------- magnetic buttons ---------- */
   var magBtns=document.querySelectorAll('.magnetic');
   magBtns.forEach(function(btn){
-    var strength=8;
+    var strength=16;
     btn.addEventListener('mousemove',function(e){
       var r=btn.getBoundingClientRect();
       var x=e.clientX-r.left-r.width/2;
       var y=e.clientY-r.top-r.height/2;
-      btn.style.transform='translate('+x/strength+'px,'+y/strength+'px)';
+      btn.style.transform='translate('+(x/strength)+'px,'+(y/strength)+'px)';
     });
     btn.addEventListener('mouseleave',function(){
       btn.style.transform='';
