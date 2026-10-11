@@ -68,10 +68,11 @@
     border-bottom:1px solid rgba(124,58,237,.15)}
   .nav{display:flex;align-items:center;justify-content:space-between;height:68px}
   .brand-wrap{display:flex;align-items:center;gap:12px}
-  .brand-logo{width:40px;height:40px;border-radius:50%;object-fit:cover;object-position:44% 28%;
+  .brand-logo-frame{width:40px;height:40px;border-radius:50%;overflow:hidden;
     border:1.5px solid rgba(124,58,237,.35);box-shadow:0 0 14px rgba(124,58,237,.2);
-    transition:box-shadow .3s var(--ease-out)}
-  .brand-logo:hover{box-shadow:0 0 22px rgba(124,58,237,.4)}
+    transition:box-shadow .3s var(--ease-out);flex-shrink:0;position:relative}
+  .brand-logo-frame:hover{box-shadow:0 0 22px rgba(124,58,237,.4)}
+  .brand-logo{position:absolute;width:280%;height:280%;left:-82%;top:-52%;object-fit:cover}
   .brand{font:800 16px/1 var(--display);letter-spacing:5px;text-transform:uppercase;
     background:linear-gradient(135deg,#fff 30%,var(--ac2) 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
   .nav-links{display:flex;gap:32px;align-items:center}
@@ -101,13 +102,15 @@
 
   /* ---------- hero ---------- */
   .hero{position:relative;padding:140px 0 100px;text-align:center;z-index:1}
-  .hero-logo-wrap{position:relative;width:min(340px,70%);margin:0 auto 40px}
+  .hero-logo-wrap{position:relative;width:min(320px,65%);margin:0 auto 40px}
   .hero-logo-glow{position:absolute;inset:-24px;background:radial-gradient(ellipse at center,rgba(124,58,237,.22),transparent 70%);filter:blur(32px);z-index:0}
-  .hero-logo{position:relative;z-index:1;width:100%;aspect-ratio:1;display:block;
-    border-radius:50%;object-fit:cover;object-position:44% 28%;
+  .hero-logo-frame{position:relative;z-index:1;width:100%;aspect-ratio:1;
+    border-radius:50%;overflow:hidden;
     border:2px solid rgba(124,58,237,.3);
     box-shadow:0 30px 60px rgba(0,0,0,.5),0 0 50px rgba(124,58,237,.15);
     animation:heroFloat 8s ease-in-out infinite}
+  .hero-logo{position:absolute;width:280%;height:280%;left:-82%;top:-52%;
+    object-fit:cover;object-position:center}
   @keyframes heroFloat{50%{transform:translateY(-8px)}}
   .eyebrow{display:inline-flex;align-items:center;gap:9px;font:600 11px/1 var(--mono);
     letter-spacing:3px;color:var(--ac3);border:1px solid rgba(124,58,237,.3);background:rgba(124,58,237,.08);
@@ -295,7 +298,7 @@
 <header>
   <div class="wrap nav">
     <a class="brand-wrap" href="#">
-      <img class="brand-logo" src="logo.png" alt="Etsuko logo">
+      <div class="brand-logo-frame"><img class="brand-logo" src="logo.png" alt=""></div>
       <span class="brand">ETSUKO</span>
     </a>
     <nav class="nav-links">
@@ -312,7 +315,9 @@
   <div class="wrap">
     <div class="hero-logo-wrap rv">
       <div class="hero-logo-glow"></div>
-      <img class="hero-logo" src="logo.png" alt="Crescent Moon Sakura Temple Nightscape">
+      <div class="hero-logo-frame">
+        <img class="hero-logo" src="logo.png" alt="Crescent Moon Sakura Temple Nightscape">
+      </div>
     </div>
     <div class="eyebrow rv">EXTERNAL &middot; WINDOWS &middot; DX11</div>
     <h1 class="rv">the external<br><span class="grad">that evolves with you</span></h1>
@@ -446,7 +451,9 @@
   <div class="wrap foot">
     <div>
       <div style="display:flex;align-items:center;gap:10px">
-        <img src="logo.png" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;object-position:44% 28%;border:1.5px solid rgba(124,58,237,.3)">
+        <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;border:1.5px solid rgba(124,58,237,.3);position:relative;flex-shrink:0">
+          <img src="logo.png" alt="" style="position:absolute;width:280%;height:280%;left:-82%;top:-52%;object-fit:cover">
+        </div>
         <div class="brand">ETSUKO</div>
       </div>
       <p>not affiliated with Roblox Corporation. use at your own discretion.</p>
