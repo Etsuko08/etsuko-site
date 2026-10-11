@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ETSUKO — external, evolved</title>
+<meta name="description" content="Etsuko external. Player ESP, silent aim, HWID-locked keys, one-click updates.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Rubik:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0F0F23;
+    --card:rgba(30,28,53,.55);
+    --tx:#E2E8F0; --dim:#94A3B8; --faint:#64748B;
+    --ac:#7C3AED; --ac2:#A78BFA; --ac3:#C4B5FD;
+    --rose:#F43F5E; --rose2:#FB7185;
+    --green:#34D399;
+    --glass:rgba(255,255,255,.04);
+    --sans:"Rubik",system-ui,sans-serif;
+    --display:"Outfit",system-ui,sans-serif;
+    --mono:"JetBrains Mono","Cascadia Code",ui-monospace,Consolas,monospace;
+    --ease:cubic-bezier(.2,.8,.2,1);
+    --ease-out:cubic-bezier(.16,1,.3,1);
+    --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scrollbar-color:#2a2d38 var(--bg)}
+  body{background:var(--bg);color:var(--tx);font:400 16px/1.6 var(--sans);overflow-x:hidden}
+  ::-webkit-scrollbar{width:8px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:#2a2d38;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#3a3e4d}
+  a{color:inherit;text-decoration:none}
+  svg{display:block}
+  :focus-visible{outline:2px solid var(--ac2);outline-offset:3px;border-radius:4px}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+
+  /* ---------- animated mesh bg ---------- */
+  .mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;will-change:transform}
+  .orb-1{width:600px;height:600px;background:radial-gradient(circle,#7C3AED 0%,transparent 70%);top:-10%;left:-8%;animation:drift1 18s ease-in-out infinite alternate}
+  .orb-2{width:500px;height:500px;background:radial-gradient(circle,#F43F5E 0%,transparent 70%);top:40%;right:-10%;opacity:.28;animation:drift2 22s ease-in-out infinite alternate}
+  .orb-3{width:400px;height:400px;background:radial-gradient(circle,#4C1D95 0%,transparent 70%);bottom:-5%;left:30%;opacity:.4;animation:drift3 20s ease-in-out infinite alternate}
+  @keyframes drift1{to{transform:translate(80px,60px) scale(1.15)}}
+  @keyframes drift2{to{transform:translate(-70px,-40px) scale(1.1)}}
+  @keyframes drift3{to{transform:translate(50px,-70px) scale(1.2)}}
+  .dots{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1px);
+    background-size:32px 32px;
+    mask-image:radial-gradient(ellipse 80% 70% at 50% 40%,#000 20%,transparent 80%)}
+
+  /* ---------- reveal ---------- */
+  .rv{opacity:0;transform:translateY(28px);transition:opacity .6s var(--ease-out),transform .6s var(--ease-out)}
+  .rv.in{opacity:1;transform:none}
+  .rv:nth-child(2){transition-delay:.08s}.rv:nth-child(3){transition-delay:.16s}
+  .rv:nth-child(4){transition-delay:.24s}.rv:nth-child(5){transition-delay:.32s}.rv:nth-child(6){transition-delay:.4s}
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .rv{opacity:1;transform:none;transition:none}
+    *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+  }
+
+  /* ---------- nav ---------- */
+  header{position:fixed;top:0;left:0;right:0;z-index:100;
+    background:rgba(15,15,35,.6);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);
+    border-bottom:1px solid rgba(124,58,237,.15)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{font:800 16px/1 var(--display);letter-spacing:5px;text-transform:uppercase;
+    background:linear-gradient(135deg,#fff 30%,var(--ac2) 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .nav-links{display:flex;gap:32px;align-items:center}
+  .nav-links a{font:500 14px/1 var(--sans);color:var(--dim);transition:color .2s;cursor:pointer}
+  .nav-links a:hover{color:#fff}
+  .verchip{font:600 10.5px/1 var(--mono);letter-spacing:1.5px;color:var(--green);
+    border:1px solid rgba(52,211,153,.25);background:rgba(52,211,153,.08);border-radius:20px;padding:6px 12px;
+    box-shadow:0 0 12px rgba(52,211,153,.1)}
+  @media(max-width:720px){.nav-links a:not(.btn){display:none}}
+
+  /* ---------- buttons ---------- */
+  .btn{display:inline-flex;align-items:center;gap:10px;border-radius:12px;cursor:pointer;
+    font:600 15px/1 var(--sans);padding:15px 30px;border:0;position:relative;
+    transition:filter .2s,transform .15s,box-shadow .25s,border-color .2s,color .2s,background .2s;
+    will-change:transform}
+  .btn-p{background:linear-gradient(135deg,var(--ac),#5B21B6);color:#fff;overflow:hidden;
+    box-shadow:0 8px 32px rgba(124,58,237,.4),inset 0 1px 0 rgba(255,255,255,.12)}
+  .btn-p::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);
+    transform:translateX(-100%);transition:transform .6s var(--ease)}
+  .btn-p:hover::before{transform:translateX(100%)}
+  .btn-p:hover{filter:brightness(1.15);box-shadow:0 12px 44px rgba(124,58,237,.55),inset 0 1px 0 rgba(255,255,255,.15)}
+  .btn-p:active{transform:translateY(1px) scale(.98)}
+  .btn-g{background:var(--glass);color:var(--dim);border:1px solid rgba(255,255,255,.1);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .btn-g:hover{border-color:var(--ac);color:var(--ac3);background:rgba(124,58,237,.08)}
+  .btn svg{width:18px;height:18px}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;padding:140px 0 100px;text-align:center;z-index:1}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font:600 11px/1 var(--mono);
+    letter-spacing:3px;color:var(--ac3);border:1px solid rgba(124,58,237,.3);background:rgba(124,58,237,.08);
+    padding:8px 18px;border-radius:24px;margin-bottom:32px;backdrop-filter:blur(8px)}
+  .eyebrow::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 10px var(--green);animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.4;box-shadow:0 0 4px var(--green)}}
+  h1{font:800 clamp(44px,8vw,88px)/1.02 var(--display);letter-spacing:-2.5px;margin-bottom:24px;font-weight:800}
+  h1 .grad{background:linear-gradient(135deg,#fff 15%,var(--ac2) 55%,var(--rose2) 95%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 40px rgba(124,58,237,.35))}
+  .tagline{color:var(--dim);font-size:clamp(16px,2.2vw,19px);max-width:580px;margin:0 auto 44px;font-weight:300;line-height:1.7}
+  .hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+  .hero-meta{font:500 13px/1 var(--mono);color:var(--faint);letter-spacing:.5px}
+  .hero-meta b{color:var(--dim);font-weight:600}
+
+  /* ---------- interactive panel mock ---------- */
+  .mock-wrap{position:relative;width:min(580px,92%);margin:72px auto 0}
+  .mock-glow{position:absolute;inset:-40px;background:radial-gradient(ellipse at center,rgba(124,58,237,.25),transparent 70%);
+    filter:blur(40px);z-index:0;animation:glowPulse 4s ease-in-out infinite alternate;transition:opacity .5s}
+  .mock-glow.hot{opacity:1.4}
+  @keyframes glowPulse{to{opacity:.5;transform:scale(1.08)}}
+  .mock{position:relative;z-index:1;border-radius:18px;
+    background:linear-gradient(180deg,rgba(30,28,53,.7),rgba(15,15,35,.9));
+    border:1px solid rgba(124,58,237,.25);
+    box-shadow:0 50px 100px rgba(0,0,0,.6),0 0 80px rgba(124,58,237,.12),inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    animation:float 7s ease-in-out infinite}
+  @keyframes float{50%{transform:translateY(-12px)}}
+  .mock::before{content:'';position:absolute;inset:0 25% auto;height:1px;border-radius:18px 18px 0 0;
+    background:linear-gradient(90deg,transparent,var(--ac),transparent)}
+  .mock-bar{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid rgba(124,58,237,.15)}
+  .mock-bar i{width:10px;height:10px;border-radius:50%;background:#2a2d38;transition:transform .2s var(--ease-spring)}
+  .mock-bar i:hover{transform:scale(1.3)}
+  .mock-bar i:first-child{background:#5b1f2a}.mock-bar i:nth-child(2){background:#5b4a12}.mock-bar i:nth-child(3){background:#14532d}
+  .mock-bar span{margin-left:10px;font:600 11px/1 var(--mono);color:var(--faint);letter-spacing:2px;text-transform:uppercase}
+  .mock-body{padding:20px 22px 24px;text-align:left;display:grid;gap:12px}
+
+  /* interactive toggle rows */
+  .mrow{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;
+    transition:border-color .25s,background .25s,box-shadow .3s;cursor:pointer;user-select:none}
+  .mrow:hover{border-color:rgba(124,58,237,.35);background:rgba(124,58,237,.05)}
+  .mrow:active{transform:scale(.995)}
+  .mrow.active{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.07);
+    box-shadow:0 0 20px rgba(124,58,237,.08)}
+  .mrow span{font:500 14px/1 var(--sans);color:var(--dim);transition:color .25s}
+  .mrow.active span{color:var(--tx)}
+  .mfeat{display:flex;align-items:center;gap:12px}
+  .mfeat-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:var(--faint);
+    transition:color .3s,border-color .3s,background .3s,box-shadow .3s}
+  .mfeat-icon svg{width:15px;height:15px}
+  .mrow.active .mfeat-icon{color:var(--ac2);border-color:rgba(124,58,237,.3);background:rgba(124,58,237,.1);
+    box-shadow:0 0 12px rgba(124,58,237,.15)}
+
+  /* spring toggle */
+  .mtoggle{width:44px;height:24px;border-radius:14px;background:rgba(255,255,255,.08);position:relative;
+    transition:background .35s var(--ease-spring),box-shadow .35s;flex-shrink:0}
+  .mtoggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+    background:#5a5f70;transition:left .35s var(--ease-spring),background .3s,box-shadow .3s,transform .35s var(--ease-spring)}
+  .mrow.active .mtoggle{background:rgba(124,58,237,.5);box-shadow:0 0 16px rgba(124,58,237,.35),inset 0 0 8px rgba(124,58,237,.2)}
+  .mrow.active .mtoggle::after{left:23px;background:var(--ac2);box-shadow:0 0 12px rgba(167,139,250,.6)}
+  .mrow:active .mtoggle::after{transform:scale(.85)}
+
+  /* status bar */
+  .mstatus{margin:4px 22px 22px;padding:12px 16px;border-radius:10px;
+    border:1px solid rgba(52,211,153,.2);background:rgba(52,211,153,.06);
+    font:600 11.5px/1 var(--mono);color:var(--green);letter-spacing:1.5px;text-align:left;
+    display:flex;align-items:center;gap:10px;transition:border-color .4s,color .4s,background .4s}
+  .mstatus::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 8px var(--green);animation:pulse 1.5s ease-in-out infinite;flex-shrink:0}
+  .mstatus.idle{border-color:rgba(100,116,139,.25);background:rgba(100,116,139,.06);color:var(--faint)}
+  .mstatus.idle::before{background:var(--faint);box-shadow:none;animation:none}
+
+  /* ---------- sections ---------- */
+  section{padding:110px 0;position:relative;z-index:1}
+  .sec-head{text-align:center;margin-bottom:64px}
+  .sec-head .k{font:700 11px/1 var(--mono);letter-spacing:4px;color:var(--ac2);text-transform:uppercase}
+  .sec-head h2{font:800 clamp(30px,5vw,48px)/1.1 var(--display);letter-spacing:-1.5px;margin-top:14px}
+  .sec-head p{color:var(--dim);margin-top:14px;font-weight:300;font-size:17px}
+
+  /* ---------- spotlight cards ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .fcard{--mx:50%;--my:50%;
+    background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:16px;
+    padding:30px 26px;position:relative;overflow:hidden;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    transition:transform .4s var(--ease-out),border-color .4s,box-shadow .4s;
+    will-change:transform}
+  .fcard::before{content:'';position:absolute;inset:0 30% auto;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(124,58,237,.5),transparent);z-index:2}
+  /* cursor spotlight — GPU friendly, no layout thrash */
+  .fcard::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:radial-gradient(500px circle at var(--mx) var(--my),
+      rgba(124,58,237,.12) 0%,rgba(124,58,237,.04) 35%,transparent 65%);
+    opacity:0;transition:opacity .4s var(--ease)}
+  .fcard:hover{transform:translateY(-4px);border-color:rgba(124,58,237,.3);
+    box-shadow:0 20px 40px rgba(0,0,0,.35),0 0 30px rgba(124,58,237,.08)}
+  .fcard:hover::after{opacity:1}
+  .ficon{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;margin-bottom:20px;
+    background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(124,58,237,.06));
+    border:1px solid rgba(124,58,237,.25);color:var(--ac2);
+    box-shadow:0 4px 16px rgba(124,58,237,.12);
+    transition:transform .4s var(--ease-spring),box-shadow .4s}
+  .fcard:hover .ficon{transform:scale(1.1) rotate(-3deg);box-shadow:0 6px 24px rgba(124,58,237,.25)}
+  .ficon svg{width:22px;height:22px}
+  .fcard h3{font:700 18px/1.3 var(--display);margin-bottom:10px;letter-spacing:-.3px}
+  .fcard p{color:var(--dim);font-size:14.5px;font-weight:300;line-height:1.65}
+
+  /* ---------- download ---------- */
+  .dl-card{max-width:740px;margin:0 auto;
+    background:linear-gradient(180deg,rgba(30,28,53,.6),rgba(15,15,35,.85));
+    border:1px solid rgba(124,58,237,.25);border-radius:22px;padding:52px 44px;text-align:center;
+    box-shadow:0 40px 100px rgba(0,0,0,.5),0 0 60px rgba(124,58,237,.1),inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:relative;overflow:hidden}
+  .dl-card::before{content:'';position:absolute;inset:0 25% auto;height:1px;
+    background:linear-gradient(90deg,transparent,var(--ac),transparent)}
+  .dl-card::after{content:'';position:absolute;inset:auto -20% -80%;height:300px;
+    background:radial-gradient(500px 200px at 50% 100%,rgba(124,58,237,.15),transparent 70%)}
+  .dl-card h2{font:800 clamp(28px,4.5vw,40px)/1.1 var(--display);letter-spacing:-1.5px;margin-bottom:12px;position:relative}
+  .dl-card>p{color:var(--dim);font-weight:300;margin-bottom:32px;font-size:17px;position:relative}
+  .dl-meta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;position:relative}
+  .dl-meta span{font:600 11px/1 var(--mono);letter-spacing:1.5px;padding:7px 14px;border-radius:20px;
+    border:1px solid rgba(255,255,255,.08);color:var(--dim);background:rgba(255,255,255,.04);
+    backdrop-filter:blur(8px)}
+  .dl-meta .v{color:var(--ac3);border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.1);
+    box-shadow:0 0 12px rgba(124,58,237,.15)}
+  .dl-meta .ok{color:var(--green);border-color:rgba(52,211,153,.25);background:rgba(52,211,153,.08)}
+  .dl-card .btn-p{font-size:17px;padding:18px 42px;position:relative}
+  .hash{display:flex;align-items:center;gap:12px;margin-top:28px;padding:14px 16px;
+    background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:12px;text-align:left;position:relative}
+  .hash code{flex:1;font:500 11px/1.6 var(--mono);color:var(--dim);word-break:break-all}
+  .hash button{flex-shrink:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--dim);
+    border-radius:8px;padding:8px 15px;font:600 11px/1 var(--mono);letter-spacing:1.5px;
+    cursor:pointer;transition:border-color .2s,color .2s,background .2s,transform .15s var(--ease-spring)}
+  .hash button:hover{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.08)}
+  .hash button:active{transform:scale(.92)}
+  .hash button.copied{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.12)}
+  .dl-note{margin-top:18px;font:400 12px/1.5 var(--mono);color:var(--faint);position:relative}
+
+  /* ---------- discord ---------- */
+  .dc-card{max-width:740px;margin:0 auto;text-align:center;padding:64px 36px;
+    border:1px solid rgba(255,255,255,.06);border-radius:22px;position:relative;overflow:hidden;
+    background:linear-gradient(180deg,rgba(30,28,53,.5),rgba(15,15,35,.8));
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+  .dc-card::before{content:'';position:absolute;inset:auto -20% -70%;height:260px;
+    background:radial-gradient(450px 180px at 50% 100%,rgba(124,58,237,.2),transparent 70%)}
+  .dc-card h2{font:800 clamp(26px,4vw,38px)/1.15 var(--display);letter-spacing:-1.2px;margin-bottom:14px;position:relative}
+  .dc-card p{color:var(--dim);font-weight:300;margin-bottom:32px;font-size:17px;position:relative}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid rgba(124,58,237,.12);padding:40px 0;position:relative;z-index:1;
+    background:rgba(10,10,26,.5);backdrop-filter:blur(12px)}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .foot .brand{font-size:14px}
+  .foot p{color:var(--faint);font-size:12.5px;margin-top:8px}
+  .foot-links{display:flex;gap:24px;align-items:center}
+  .foot a{color:var(--dim);font:500 13px/1 var(--sans);transition:color .2s;cursor:pointer}
+  .foot a:hover{color:var(--ac3)}
+
+  /* ---------- toast ---------- */
+  #toast{position:fixed;right:24px;bottom:24px;z-index:999;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .toast{background:rgba(30,28,53,.92);border:1px solid rgba(52,211,153,.25);border-left:3px solid var(--green);
+    border-radius:10px;padding:12px 16px;font:500 12.5px/1 var(--mono);color:var(--tx);
+    box-shadow:0 12px 32px rgba(0,0,0,.5);backdrop-filter:blur(12px);
+    animation:tin .3s var(--ease-spring);transition:opacity .3s,transform .3s}
+  .toast.out{opacity:0;transform:translateX(24px)}
+  .toast.purple{border-color:rgba(124,58,237,.35);border-left-color:var(--ac2)}
+  @keyframes tin{from{transform:translateX(24px) scale(.9);opacity:0}}
+
+  /* ---------- confetti burst ---------- */
+  .confetti{position:fixed;pointer-events:none;z-index:998;border-radius:2px;will-change:transform,opacity}
+</style>
+</head>
+<body>
+
+<div class="mesh" aria-hidden="true">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div class="dots" aria-hidden="true"></div>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#">ETSUKO</a>
+    <nav class="nav-links">
+      <a href="#features">features</a>
+      <a href="#download">download</a>
+      <a href="#discord">discord</a>
+      <span class="verchip">v1.0.4</span>
+      <a class="btn btn-g" style="padding:9px 20px;font-size:13px" href="https://discord.gg/q9Seq9rwgf" target="_blank" rel="noopener">join</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow rv">EXTERNAL &middot; WINDOWS &middot; DX11</div>
+    <h1 class="rv">the external<br><span class="grad">that evolves with you</span></h1>
+    <p class="tagline rv">player ESP, silent aim, HWID-locked keys and one-click updates &mdash;
+      built lean, shipped fast, updated the moment the game moves.</p>
+    <div class="hero-cta rv">
+      <a class="btn btn-p magnetic" href="setup/EtsukoSetup.exe" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        download setup
+      </a>
+      <a class="btn btn-g magnetic" href="https://discord.gg/q9Seq9rwgf" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        join discord
+      </a>
+    </div>
+    <p class="hero-meta rv"><b>v1.0.4</b> &middot; windows 10/11 &middot; <b>5.5 mb</b> &middot; sha256 verified</p>
+
+    <div class="mock-wrap rv">
+      <div class="mock-glow" id="mockGlow"></div>
+      <div class="mock" id="mockPanel">
+        <div class="mock-bar"><i></i><i></i><i></i><span>ETSUKO</span></div>
+        <div class="mock-body">
+          <div class="mrow active" data-feat="esp" role="button" tabindex="0" aria-pressed="true" aria-label="toggle Player ESP">
+            <div class="mfeat">
+              <div class="mfeat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+              <span>Player ESP</span>
+            </div>
+            <div class="mtoggle"></div>
+          </div>
+          <div class="mrow active" data-feat="aim" role="button" tabindex="0" aria-pressed="true" aria-label="toggle Silent Aim">
+            <div class="mfeat">
+              <div class="mfeat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg></div>
+              <span>Silent Aim</span>
+            </div>
+            <div class="mtoggle"></div>
+          </div>
+          <div class="mrow" data-feat="engine" role="button" tabindex="0" aria-pressed="false" aria-label="toggle Engine chain">
+            <div class="mfeat">
+              <div class="mfeat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></div>
+              <span>Engine chain</span>
+            </div>
+            <div class="mtoggle"></div>
+          </div>
+        </div>
+        <div class="mstatus" id="mockStatus">KEY VALID &middot; HWID LOCKED &middot; SESSION LIVE</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div class="k">features</div>
+      <h2>everything that matters,<br>nothing that bloats</h2>
+      <p>each feature ships tested against the live build &mdash; when the game updates, we update first.</p>
+    </div>
+    <div class="grid">
+      <div class="fcard rv">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <h3>Player ESP</h3>
+        <p>boxes, names and health through walls &mdash; drawn on a clean DX11 overlay that never tanks your frames.</p>
+      </div>
+      <div class="fcard rv">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg></div>
+        <h3>Silent Aim</h3>
+        <p>pixel-precise target correction with tunable smoothing &mdash; hits register without moving your crosshair.</p>
+      </div>
+      <div class="fcard rv">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+        <h3>HWID-locked keys</h3>
+        <p>every key binds to one machine. your access is yours alone &mdash; no sharing, no resold dupes.</p>
+      </div>
+      <div class="fcard rv">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+        <h3>one-click updates</h3>
+        <p>the panel checks the build on launch &mdash; outdated clients pull the new version automatically. no re-downloads, no &ldquo;restart your pc&rdquo;.</p>
+      </div>
+      <div class="fcard rv">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div>
+        <h3>lean by design</h3>
+        <p>no bloat, no background junk &mdash; a single overlay process that plays nice with your fps.</p>
+      </div>
+      <div class="fcard rv">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <h3>support that answers</h3>
+        <p>real humans in the discord, setup help to key resets &mdash; most tickets closed in minutes, not days.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <div class="dl-card rv">
+      <h2>grab the setup</h2>
+      <p>one installer. launch it, paste your key, play.</p>
+      <div class="dl-meta">
+        <span class="v">v1.0.4</span>
+        <span>5.5 MB</span>
+        <span>WINDOWS 10/11</span>
+        <span class="ok">SHA256 VERIFIED</span>
+      </div>
+      <a class="btn btn-p magnetic" href="setup/EtsukoSetup.exe" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        download EtsukoSetup.exe
+      </a>
+      <div class="hash">
+        <code id="sha">c93259c5ebb37b0d6c878528c04b820759e5d81c817550f4d3c57baa9b49aff6</code>
+        <button id="copyhash" type="button" aria-label="copy sha256 hash">copy</button>
+      </div>
+      <p class="dl-note">verify after download: certutil -hashfile EtsukoSetup.exe SHA256</p>
+    </div>
+  </div>
+</section>
+
+<section id="discord">
+  <div class="wrap">
+    <div class="dc-card rv">
+      <h2>keys, support, updates &mdash;<br>all in one place</h2>
+      <p>join the server for your key, setup help, and the second an update drops.</p>
+      <a class="btn btn-p magnetic" href="https://discord.gg/q9Seq9rwgf" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        join the server
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div>
+      <div class="brand">ETSUKO</div>
+      <p>not affiliated with Roblox Corporation. use at your own discretion.</p>
+    </div>
+    <div class="foot-links">
+      <a href="#features">features</a>
+      <a href="#download">download</a>
+      <a href="https://discord.gg/q9Seq9rwgf" target="_blank" rel="noopener">discord</a>
+    </div>
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- audio context (lazy, single) ---------- */
+  var AC=null;
+  function blip(freq,dur,vol){
+    try{
+      if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();
+      var o=AC.createOscillator(),g=AC.createGain();
+      o.type='sine';o.frequency.value=freq;
+      g.gain.setValueAtTime(vol||.06,AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+(dur||.08));
+      o.connect(g);g.connect(AC.destination);
+      o.start();o.stop(AC.currentTime+(dur||.08));
+    }catch(e){}
+  }
+
+  /* ---------- toast ---------- */
+  var toastBox=document.getElementById('toast');
+  function toast(msg,purple){
+    var d=document.createElement('div');
+    d.className='toast'+(purple?' purple':'');d.textContent=msg;
+    toastBox.appendChild(d);
+    setTimeout(function(){d.classList.add('out');setTimeout(function(){d.remove()},350)},2200);
+  }
+
+  /* ---------- confetti burst ---------- */
+  var COLORS=['#7C3AED','#A78BFA','#C4B5FD','#F43F5E','#34D399','#fff'];
+  function confetti(x,y,n){
+    n=n||12;
+    for(var i=0;i<n;i++){
+      var el=document.createElement('div');
+      el.className='confetti';
+      var sz=3+Math.random()*5;
+      el.style.cssText='width:'+sz+'px;height:'+sz+'px;background:'+COLORS[i%COLORS.length]+
+        ';left:'+x+'px;top:'+y+'px;position:fixed';
+      document.body.appendChild(el);
+      var ang=Math.random()*Math.PI*2, vel=60+Math.random()*100;
+      var dx=Math.cos(ang)*vel, dy=Math.sin(ang)*vel-40;
+      el.animate([
+        {transform:'translate(0,0) rotate(0deg) scale(1)',opacity:1},
+        {transform:'translate('+dx+'px,'+(dy+80)+'px) rotate('+(Math.random()*360)+'deg) scale(0)',opacity:0}
+      ],{duration:500+Math.random()*300,easing:'cubic-bezier(.16,1,.3,1)',fill:'forwards'});
+      setTimeout(function(el){return function(){el.remove()}}(el),900);
+    }
+  }
+
+  /* ---------- interactive toggles ---------- */
+  var rows=document.querySelectorAll('.mrow');
+  var statusEl=document.getElementById('mockStatus');
+  var glowEl=document.getElementById('mockGlow');
+  var STATUS_TEXT='KEY VALID \u00b7 HWID LOCKED \u00b7 SESSION LIVE';
+  var STATUS_OFF='\u25cf 0/3 MODULES ACTIVE \u00b7 STANDBY';
+
+  function updateStatus(){
+    var on=document.querySelectorAll('.mrow.active').length;
+    if(on===0){
+      statusEl.textContent=STATUS_OFF;
+      statusEl.classList.add('idle');
+      glowEl.classList.remove('hot');
+    }else{
+      statusEl.textContent=STATUS_TEXT;
+      statusEl.classList.remove('idle');
+      glowEl.classList.toggle('hot',on>=2);
+    }
+  }
+
+  rows.forEach(function(row){
+    function toggle(e){
+      var wasActive=row.classList.contains('active');
+      row.classList.toggle('active');
+      row.setAttribute('aria-pressed',String(!wasActive));
+      blip(wasActive?320:580,.07,.05);
+      if(!wasActive){
+        var r=row.getBoundingClientRect();
+        confetti(r.right-40,r.top+r.height/2,10);
+      }
+      updateStatus();
+    }
+    row.addEventListener('click',toggle);
+    row.addEventListener('keydown',function(e){
+      if(e.key===' '||e.key==='Enter'){e.preventDefault();toggle();}
+    });
+  });
+
+  /* ---------- spotlight cards (rAF-throttled) ---------- */
+  var cards=document.querySelectorAll('.fcard');
+  var mouseActive=false,mx=0,my=0,rafId=null;
+  function updateSpotlights(){
+    rafId=null;
+    cards.forEach(function(c){
+      var r=c.getBoundingClientRect();
+      if(mx>=r.left-60&&mx<=r.right+60&&my>=r.top-60&&my<=r.bottom+60){
+        c.style.setProperty('--mx',(mx-r.left)+'px');
+        c.style.setProperty('--my',(my-r.top)+'px');
+      }
+    });
+  }
+  document.addEventListener('mousemove',function(e){
+    mx=e.clientX;my=e.clientY;
+    if(!rafId)rafId=requestAnimationFrame(updateSpotlights);
+  },{passive:true});
+
+  /* ---------- magnetic buttons ---------- */
+  var magBtns=document.querySelectorAll('.magnetic');
+  magBtns.forEach(function(btn){
+    var strength=8;
+    btn.addEventListener('mousemove',function(e){
+      var r=btn.getBoundingClientRect();
+      var x=e.clientX-r.left-r.width/2;
+      var y=e.clientY-r.top-r.height/2;
+      btn.style.transform='translate('+x/strength+'px,'+y/strength+'px)';
+    });
+    btn.addEventListener('mouseleave',function(){
+      btn.style.transform='';
+    });
+  });
+
+  /* ---------- scroll reveal ---------- */
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}});
+  },{threshold:.12});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el)});
+
+  /* ---------- copy hash ---------- */
+  var copyBtn=document.getElementById('copyhash');
+  copyBtn.addEventListener('click',function(){
+    var t=document.getElementById('sha').textContent.trim();
+    navigator.clipboard.writeText(t).then(function(){
+      copyBtn.textContent='copied!';
+      copyBtn.classList.add('copied');
+      toast('sha256 copied');
+      blip(700,.08,.05);
+      setTimeout(function(){
+        copyBtn.textContent='copy';
+        copyBtn.classList.remove('copied');
+      },1800);
+    });
+  });
+
+  /* ---------- init ---------- */
+  updateStatus();
+})();
+</script>
+</body>
+</html>
